@@ -1,26 +1,253 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang='zh'>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>投研日报列表</title>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>每日市场战备仪表板</title>
+
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 1.4rem; }
-  ul { list-style: none; padding: 0; }
-  li { margin: 10px 0; }
-  a { color: #0066cc; }
+  :root{
+    --bg:#06080f;
+    --panel:#0d1424;
+    --panel-2:#0f1a31;
+    --line:#24314d;
+    --text:#e6eefc;
+    --muted:#90a4c5;
+    --accent:#48d5ff;
+    --accent-2:#6d7bff;
+    --good:#34d399;
+    --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    padding:24px;
+    background:
+      radial-gradient(900px 480px at 15% -10%, rgba(72,213,255,0.12), transparent 60%),
+      radial-gradient(900px 420px at 90% 0%, rgba(109,123,255,0.16), transparent 55%),
+      var(--bg);
+    color:var(--text);
+  }
+  .container{max-width:1220px;margin:0 auto}
+  .hero{
+    position:relative;
+    overflow:hidden;
+    padding:22px 24px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:
+      linear-gradient(110deg, rgba(8,15,28,0.90), rgba(8,15,28,0.56) 45%, rgba(8,15,28,0.82)),
+      url('market-bg.svg');
+    background-size:cover;
+    background-position:center 62%;
+    box-shadow:0 18px 50px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(72,213,255,0.08);
+    margin-bottom:18px;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(72,213,255,0.07), rgba(0,0,0,0.28));
+    pointer-events:none;
+  }
+  .hero > *{position:relative;z-index:1}
+  .hero h1{font-size:32px;margin:0 0 8px 0;letter-spacing:0.3px}
+  .hero p{margin:0;color:var(--muted);font-size:14px}
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:12px;
+    margin:16px 0 20px 0;
+  }
+  .kpi{
+    background:linear-gradient(180deg, rgba(17,27,49,0.95), rgba(12,20,38,0.95));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+  }
+  .kpi .label{color:var(--muted);font-size:12px}
+  .kpi .value{font-size:20px;font-weight:700;margin-top:4px;color:#f4f8ff}
+  section.card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 22px;
+    margin-bottom:18px;
+    box-shadow:0 10px 28px rgba(0,0,0,0.28);
+  }
+  section.card.stocks-card{
+    background:linear-gradient(180deg, rgba(24,18,58,0.92), rgba(20,24,74,0.92));
+    border-color:rgba(120,96,255,0.42);
+    box-shadow:0 12px 30px rgba(88,84,255,0.20);
+  }
+  section.card.stocks-card h2{color:#ddd6fe}
+  section.card.stocks-card h3{color:#a78bfa}
+  section.card.stocks-card table{
+    border-color:rgba(120,96,255,0.35);
+    background:rgba(17,13,40,0.45);
+  }
+  section.card.stocks-card th{
+    background:rgba(45,34,100,0.72);
+    color:#e9ddff;
+  }
+  section.card.crypto-card{
+    background:linear-gradient(180deg, rgba(52,27,10,0.92), rgba(36,20,8,0.92));
+    border-color:rgba(251,146,60,0.40);
+    box-shadow:0 12px 30px rgba(249,115,22,0.20);
+  }
+  section.card.crypto-card h2{color:#ffddb6}
+  section.card.crypto-card h3{color:#fb923c}
+  section.card.crypto-card table{
+    border-color:rgba(251,146,60,0.35);
+    background:rgba(35,18,8,0.45);
+  }
+  section.card.crypto-card th{
+    background:rgba(92,47,16,0.70);
+    color:#fed7aa;
+  }
+  h2{font-size:20px;margin:0 0 12px 0;color:#dbeafe}
+  h3{
+    font-size:15px;
+    margin:16px 0 8px 0;
+    color:var(--accent);
+    font-weight:600;
+  }
+  ul{margin:0 0 0.5em 0;padding:0;list-style:none}
+  li{
+    margin-bottom:8px;
+    color:#d7e3fb;
+    padding-left:14px;
+    position:relative;
+    line-height:1.45;
+  }
+  li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:9px;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    font-size:13px;
+    background:rgba(6,10,20,0.35);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  th,td{
+    padding:10px 10px;
+    border-bottom:1px solid rgba(36,49,77,0.9);
+    text-align:left;
+  }
+  th{
+    background:rgba(16,27,50,0.9);
+    font-weight:600;
+    color:#cae4ff;
+    position:sticky;
+    top:0;
+  }
+  td{color:#e6eefc}
+  tr:hover td{background:rgba(72,213,255,0.06)}
+  p{color:#d7e3fb;line-height:1.5}
+  small{color:var(--muted)}
+  .chip{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid rgba(72,213,255,0.35);
+    color:#bfeeff;
+    font-size:12px;
+    margin-right:8px;
+  }
 </style>
+
 </head>
 <body>
-<h1>投研日报</h1>
-<p>共 4 期</p>
-<ul>
-<li><a href="report/2026-03-14.html">投研日报 2026-03-14</a></li>
-<li><a href="report/2026-03-13.html">投研日报 2026-03-13</a></li>
-<li><a href="report/2026-03-12.html">投研日报 2026-03-12</a></li>
-<li><a href="report/2026-03-11.html">投研日报 2026-03-11</a></li>
-
-</ul>
-</body>
-</html>
+<div class='container'>
+<div class='hero'>
+<h1>每日市场战备仪表板</h1>
+<p><span class='chip'>更新日期 2026-03-14</span><span class='chip'>数据源 Futu / Binance / FRED / X</span></p>
+</div>
+<div class='kpi-grid'><div class='kpi'><div class='label'>直接美股</div><div class='value'>8,732.37</div></div><div class='kpi'><div class='label'>代币化权益</div><div class='value'>8,000.00</div></div><div class='kpi'><div class='label'>基金美股敞口</div><div class='value'>646.10</div></div><div class='kpi'><div class='label'>美元总敞口</div><div class='value'>17,378.47</div></div></div>
+<section class='card'>
+<h2>今日背景</h2>
+<ul><li>伊朗冲突升级推高能源链风险：中东-东亚 VLCC 费率飙到 42 万美元/天，霍尔木兹与波斯湾航路持续拥堵（OilPrice）。</li><li>美国政府据称准备公布分阶段方案抑制油价冲击，但在方案落地前市场仍按供应受限定价。</li><li>中东战火外溢：沙特最大炼厂、卡塔尔 LNG、以色列 Leviathan 气田陆续停运，亚太炼化与航空公司继续下调运力。</li><li>航运保险与再保公司削减海湾战区保障，印度/巴基斯坦等进口国改走红海或寻替代来源，进一步推升物流成本。</li></ul>
+</section>
+<section class='card'>
+<h2>美股盘前与大宗商品</h2>
+<ul><li>WTI (CL=F): 98.71 | Brent (BZ=F): —</li><li>黄金 (GC=F): 5,061.70 | 白银 (SI=F): 8,134.30 | 美元指数 (DX-Y.NYB): 100.36</li></ul>
+</section>
+<section class='card'>
+<h2>焦点宏观事件：美伊战争升级</h2>
+<h3>冲突态势</h3>
+<ul><li>美军强化波斯湾与伊拉克的兵力部署，伊朗加大对霍尔木兹海峡的封控与骚扰行动。</li><li>以色列与伊朗代理人冲突延伸到叙利亚、黎巴嫩，区域火力密度仍在抬升。</li></ul>
+<h3>市场传导</h3>
+<ul><li>能源链：VLCC 与 LNG 运价持续飙升，WTI/Brent 近端价差倒挂，炼化与航空盈利承压。</li><li>通胀路径：油价回升推高通胀再加速的预期，美债长端收益率止跌，美联储降息押注降温。</li><li>避险/流动性：黄金、美元指数走强；中东航线受阻抬高全球供应链成本，风险偏好急剧波动。</li></ul>
+<h3>需要盯住</h3>
+<ul><li>霍尔木兹实际通航量、VLCC 日租金与港口拥堵指数。</li><li>美国/伊朗的红线互动：是否升级为直接冲突，或仅维持代理人战。</li><li>油价引发的政策应对：美国 SPR 动用节奏、OPEC+ 态度、G7 对俄油价上限的再调整。</li></ul>
+</section>
+<section class='card'><h2>AI 深度策略分析</h2>
+<p><strong>总览结论</strong></p><ul><li><strong>主风险</strong>：中东冲突推高原油；美联储利率决议不确定性仍在，可能导致美元波动并冲击美股；比特币持仓已占资产相当比例，超过安全门槛，杠杆受限且强平风险提升。</li><li><strong>今日优先执行</strong>：一是对原油采用宽幅区间网格捕捉波动；二是对比特币使用保守马丁策略，保持低杠杆并控制整体仓位在安全范围内；三是对 SPY 维持轻仓区间网格，重点关注负面社交情绪的潜在回调。</li><li><strong>明确不做</strong>：暂不在欧元区、美国国债等宏观敏感资产上开新仓，以免因利率或政治突发冲击导致快速回撤。</li></ul><hr style='border:none;border-top:1px solid rgba(144,164,197,0.35);margin:12px 0;'><h3>标的：SPY</h3><p><strong>市场状态判断</strong></p><ul><li>缺乏明确的技术趋势信息，社交情绪偏负面，宏观因素对大盘形成压制。</li></ul><p><strong>策略类型</strong></p><ul><li>区间网格。</li></ul><p><strong>策略选择理由</strong></p><ul><li>负面情绪和利率压制使得价格在窄幅区间内波动概率较高，适合通过稠密网格捕捉小幅波动。</li></ul><p><strong>方向偏好</strong></p><ul><li>中性偏空。</li></ul><p><strong>适用周期</strong></p><ul><li>短至中期。</li></ul><p><strong>仓位杠杆风格</strong></p><ul><li>轻仓、低杠杆。</li></ul><p><strong>网格/马丁风格描述</strong></p><ul><li>窄区间网格稠密，步幅细致。</li></ul><p><strong>触发条件</strong></p><ul><li>当价格在设定的窄区间内出现波动时，自动挂单执行网格。</li></ul><p><strong>失效条件</strong></p><ul><li>若出现明显的正面社交情绪或宏观刺激导致趋势转强，则撤销网格。</li></ul><p><strong>风险提示</strong></p><ul><li>持仓已超单标的上限，需要先削减至合规比例；负面情绪和利率决议可能导致快速回撤。</li></ul><hr style='border:none;border-top:1px solid rgba(144,164,197,0.35);margin:12px 0;'><h3>标的：原油</h3><p><strong>市场状态判断</strong></p><ul><li>受中东冲突驱动，供需紧张，基本面偏多。</li></ul><p><strong>策略类型</strong></p><ul><li>多头区间网格。</li></ul><p><strong>策略选择理由</strong></p><ul><li>供应受限且宏观因素提升价格上行空间，宽幅区间网格可以捕捉较大波动并锁定收益。</li></ul><p><strong>方向偏好</strong></p><ul><li>看多。</li></ul><p><strong>适用周期</strong></p><ul><li>中至长期。</li></ul><p><strong>仓位杠杆风格</strong></p><ul><li>中等仓位、适度杠杆。</li></ul><p><strong>网格/马丁风格描述</strong></p><ul><li>大区间网格稀疏，间隔较宽以适应波动幅度。</li></ul><p><strong>触发条件</strong></p><ul><li>价格在宽区间内出现回调或反弹时启动挂单。</li></ul><p><strong>失效条件</strong></p><ul><li>若冲突缓和、供应快速恢复导致价格跌破区间底部，则停止网格。</li></ul><p><strong>风险提示</strong></p><ul><li>当前未持仓，可按上限直接布局；若冲突升级或供应意外释放会导致剧烈波动。</li></ul><hr style='border:none;border-top:1px solid rgba(144,164,197,0.35);margin:12px 0;'><h3>标的：BTC</h3><p><strong>市场状态判断</strong></p><ul><li>社交情绪偏正面，数字资产指数呈小幅上扬，宏观避险需求支撑。</li></ul><p><strong>策略类型</strong></p><ul><li>区间网格配合马丁加仓。</li></ul><p><strong>策略选择理由</strong></p><ul><li>虽有正面情绪，但持仓已占较高比例，需要通过保守马丁控制风险并在窄区间内获取收益。</li></ul><p><strong>方向偏好</strong></p><ul><li>略偏多。</li></ul><p><strong>适用周期</strong></p><ul><li>短至中期。</li></ul><p><strong>仓位杠杆风格</strong></p><ul><li>低仓位、低杠杆。</li></ul><p><strong>网格/马丁风格描述</strong></p><ul><li>窄区间网格稠密；马丁采用安全单数量多、翻倍加仓更激进的方式，以快速降低持仓成本。</li></ul><p><strong>触发条件</strong></p><ul><li>价格在窄区间波动时自动挂单；若出现回调至网格下方则启动马丁加仓。</li></ul><p><strong>失效条件</strong></p><ul><li>若价格突破窄区间上限或出现重大监管负面新闻，则终止网格并平仓。</li></ul><p><strong>风险提示</strong></p><ul><li>持仓已超安全阈值，继续加仓必须控制在总仓位的安全比例内；监管动向或地缘政治变动可能导致快速回撤。</li></ul>
+<p><small>注：历史“整体资产全景图”配置已保留在配置文件中，当前页面暂不展示。</small></p>
+</section>
+<section class='card'><h2>关键数据与事件前瞻（ET）</h2>
+<table><tr><th>日期</th><th>时间</th><th>事件</th><th>关注点</th></tr><tr><td>3 月 24 日</td><td>08:30</td><td>生产率修正值</td><td>成本压力再确认</td></tr></table>
+</section>
+<section class='card'><h2>策略思考与风险提示</h2>
+<ul><li>能源/防务顺势：供应冲击 + 地缘升温，逢回布局并利用高隐波做风险溢价。</li><li>航空/旅游谨慎：燃油成本与航线中断双重打击，等待空域恢复或油价回落。</li><li>通胀再抬头风险：油价若维持高位，降息预期或再度降温，需重新评估长端利率及金融股曝险。</li><li>风险管理：VIX、金价走高说明尾部风险升温，若考虑左侧抄底，建议等待 3/6 非农信号。</li><li>观察指标：霍尔木兹通航、伊朗对能源设施动作、美欧制裁与军事部署节奏。</li></ul>
+</section>
+<section class='card'><h2>美元资产敞口概览</h2>
+<table><tr><th>项目</th><th>金额 (USD)</th></tr><tr><td>直接美股持仓</td><td>8,732.37</td></tr><tr><td>链上/代币化权益</td><td>8,000.00</td></tr><tr><td>基金中的美股敞口</td><td>646.10</td></tr><tr><td>组合总敞口</td><td>17,378.47</td></tr></table>
+</section>
+<section class='card stocks-card'><h2>美股直接持仓与新闻</h2>
+<table><tr><th>代码</th><th>金额USD</th><th>估算股数</th><th>最新价</th><th>板块</th></tr><tr><td>SPY</td><td>1,987</td><td>3.00</td><td>662.29</td><td>AUTO_FROM_FUTU</td></tr><tr><td>DIA</td><td>1,399</td><td>3.00</td><td>466.41</td><td>INDEX_ETF</td></tr><tr><td>TSLA</td><td>1,174</td><td>3.00</td><td>391.20</td><td>EV_AI</td></tr><tr><td>AAPL</td><td>750</td><td>3.00</td><td>250.12</td><td>MEGA_TECH</td></tr><tr><td>NVDA</td><td>721</td><td>4.00</td><td>180.25</td><td>AI_GPU</td></tr><tr><td>COIN</td><td>587</td><td>3.00</td><td>195.53</td><td>CRYPTO_EXCHANGE</td></tr><tr><td>TQQQ</td><td>551</td><td>12.00</td><td>45.93</td><td>LEVERAGED_QQQ</td></tr><tr><td>ARM</td><td>463</td><td>4.00</td><td>115.75</td><td>CHIP_IP</td></tr><tr><td>SMH</td><td>387</td><td>1.00</td><td>387.33</td><td>AUTO_FROM_FUTU</td></tr><tr><td>SGOV</td><td>201</td><td>2.00</td><td>100.52</td><td>AUTO_FROM_FUTU</td></tr><tr><td>JEPI</td><td>171</td><td>3.00</td><td>57.09</td><td>AUTO_FROM_FUTU</td></tr><tr><td>LKNCY</td><td>139</td><td>4.00</td><td>34.70</td><td>AUTO_FROM_FUTU</td></tr><tr><td>O</td><td>129</td><td>2.00</td><td>64.44</td><td>AUTO_FROM_FUTU</td></tr><tr><td>BLSH</td><td>73</td><td>2.00</td><td>36.62</td><td>AUTO_FROM_FUTU</td></tr></table>
+<h3>DIA 新闻速览</h3>
+<ul><li>Bitget：DIA 仍是保守投资者配置美股蓝筹的核心 ETF。</li><li>Stocktwits：地缘冲突促资金转向防御型指数与高股息 ETF。</li><li>Motley Fool：分析师建议用高分红指数基金对冲标普波动。</li></ul>
+<h3>TSLA 新闻速览</h3>
+<ul><li>Forbes：若 Model 2、储能与完全自动驾驶同步落地，有望触发新一轮股价突破。</li><li>Barron's：油价飙升已无法继续推高特斯拉，市场改看交付与利润率。</li><li>36 氪：部分车型停产与产能瓶颈使马斯克或寻求新的业务赛道。</li></ul>
+<h3>AAPL 新闻速览</h3>
+<ul><li>TechStock²：机构披露增持，iPhone 仍是现金牛。</li><li>Seeking Alpha：发布 599 美元 iPhone 17e 与新 iPad Air，扩大全民产品线。</li><li>MarketBeat：部分资管减持，等待 AI 与低价 MacBook 更明确的时间表。</li></ul>
+<h3>NVDA 新闻速览</h3>
+<ul><li>TheStreet：高盛重估盈利模型，强调数据中心需求仍强劲。</li><li>Seeking Alpha：携手 Lumentum、Coherent 推进次世代光模块保障 AI 互连。</li><li>TipRanks：摩根士丹利再度列为 Top Pick，看好 AI 基建周期。</li></ul>
+<h3>COIN 新闻速览</h3>
+<ul><li>CoinCentral：24/5 股票交易推进“全能交易所”故事，但交易量下滑拖累财报。</li><li>AOL：股价月内回调约 27%，监管节奏与手续费黏性成焦点。</li><li>Barchart：若零佣金股票/ETF 成功落地，可带来新的交叉销售渠道。</li></ul>
+<h3>TQQQ 新闻速览</h3>
+<ul><li>InteractiveCrypto：被视为科技+加密情绪放大器，短线波动明显增大。</li></ul>
+<h3>ARM 新闻速览</h3>
+<ul><li>AOL：最新季度指引偏保守，AI 服务器需求仍是核心期待。</li><li>MarketBeat：大型资管持续增持 ARM ADR，押注明后架构授权费。</li><li>AOL：亚马逊扩大 Arm 架构芯片使用，为云端 AI 提供顺风。</li></ul>
+<h3>SGOV 新闻速览</h3>
+<ul><li>Barron's：短期国债 ETF 受青睐，投资者利用 5% 票息做流动性停泊。</li><li>Morningstar：美联储若维持利率高位，超短债基金收益可延续。</li></ul>
+</section>
+<section class='card crypto-card'><h2>加密资产与债券快照</h2>
+<table><tr><th>品种</th><th>最新价</th><th>点评</th></tr><tr><td>BTC-USD</td><td>70,794.63</td><td>比特币：避险与流动性矛盾，波动高</td></tr><tr><td>ETH-USD</td><td>2,076.25</td><td>以太坊：质押收益下降，等待 ETF 明确信号</td></tr><tr><td>SGOV</td><td>100.52</td><td>超短美债 ETF，5% 票息的流动性停泊位</td></tr></table>
+<h3>BTC-USD 新闻速览</h3>
+<ul><li>CoinDesk：比特币在 6 万美元附近震荡，避险需求与矿工抛压同频。</li><li>Bloomberg：ETF 净流入放缓，市场关注美联储对加密的监管口径。</li></ul>
+<h3>ETH-USD 新闻速览</h3>
+<ul><li>Decrypt：以太坊质押收益回落，交易费用随风险资产降温而回调。</li><li>The Block：ETF 审批延迟令资金更倚重质押与 L2 收益。</li></ul>
+<h3>SGOV 新闻速览</h3>
+<ul><li>Barron's：短期国债 ETF 受青睐，投资者利用 5% 票息做流动性停泊。</li><li>Morningstar：美联储若维持利率高位，超短债基金收益可延续。</li></ul>
+</section>
+<section class='card crypto-card'><h2>每日热点 · Binance Skill Rankings</h2>
+<h3>趋势榜 (rankType=10)</h3>
+<table><tr><th>Token</th><th>Price</th><th>24h Δ%</th><th>Vol 24h</th><th>Liquidity</th></tr><tr><td>quq</td><td>0.00</td><td>0.09%</td><td>288,142,993.51</td><td>2,361,039.66</td></tr><tr><td>UP</td><td>0.07</td><td>10.22%</td><td>60,458,166.82</td><td>1,589,750.43</td></tr><tr><td>KOGE</td><td>48.01</td><td>0.03%</td><td>60,097,098.55</td><td>12,601,406.25</td></tr><tr><td>FF</td><td>0.07</td><td>-1.1%</td><td>49,392,978.09</td><td>3,881,850.79</td></tr><tr><td>WMTX</td><td>0.09</td><td>2.89%</td><td>46,282,433.12</td><td>1,287,999.78</td></tr></table>
+<h3>热搜榜 (rankType=11)</h3>
+<table><tr><th>Token</th><th>Price</th><th>24h Δ%</th><th>Vol 24h</th><th>Holders</th></tr><tr><td>MOONDOGE</td><td>0.00</td><td>1709.63%</td><td>7,537,439.34</td><td>1,811.00</td></tr><tr><td>PIEVERSE</td><td>0.52</td><td>4.13%</td><td>3,307,881.33</td><td>37,472.00</td></tr><tr><td>frogs</td><td>0.00</td><td>11893.93%</td><td>4,354,792.69</td><td>1,722.00</td></tr><tr><td>龙虾</td><td>0.02</td><td>-20.68%</td><td>6,213,018.97</td><td>10,123.00</td></tr><tr><td>UP</td><td>0.07</td><td>10.22%</td><td>60,458,166.82</td><td>22,388.00</td></tr></table>
+<h3>Smart Money Radar</h3>
+<table><tr><th>Token</th><th>Net Inflow (USD)</th><th>Traders</th><th>Price</th><th>Market Cap</th><th>Risk Level</th></tr><tr><td>Fight</td><td>7,777.21</td><td>2</td><td>0.00</td><td>2,391,559.93</td><td>0</td></tr><tr><td>天梯</td><td>6,355.42</td><td>6</td><td>0.00</td><td>344,747.80</td><td>-1</td></tr><tr><td>BSN</td><td>2,644.87</td><td>3</td><td>0.00</td><td>1,782,031.86</td><td>2</td></tr><tr><td>MILADY</td><td>1,146.21</td><td>1</td><td>0.00</td><td>3,472,727.02</td><td>0</td></tr><tr><td>天梯</td><td>567.06</td><td>3</td><td>0.00</td><td>2,892.50</td><td>1</td></tr></table>
+</section>
+<section class='card'><h2>Tokenized 持仓</h2>
+<table><tr><th>代币</th><th>对应标的</th><th>金额USD</th><th>平台</th></tr><tr><td>QQQX_TOKEN</td><td>QQQ</td><td>4,000</td><td>token-platform</td></tr><tr><td>TSLA_TOKEN</td><td>TSLA</td><td>4,000</td><td>token-platform</td></tr></table>
+</section>
+<section class='card'><h2>基金敞口</h2>
+<table><tr><th>名称</th><th>代码</th><th>总市值</th><th>美股占比</th><th>美股敞口</th></tr><tr><td>Morgan Global Income</td><td>05002</td><td>994</td><td>65.0%</td><td>646.1</td></tr><tr><td>Morgan Japan Fund</td><td>05052</td><td>1,495</td><td>0.0%</td><td>0.0</td></tr><tr><td>Morgan Europe High Income</td><td>05316</td><td>1,490</td><td>0.0%</td><td>0.0</td></tr></table>
+</section>
+</div>
+<p style="margin-top:24px"><a href="reports.html">历史日报</a></p>
+</body></html>
